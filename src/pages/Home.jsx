@@ -30,9 +30,6 @@ function Home() {
   })
 
   const listings = data?.data?.list || data?.results || data?.data || []
-  console.log('API Response:', data)        // ← add this
-console.log('First listing:', listings[0]) // ← and this
-console.log('Full listing structure:', JSON.stringify(listings[0], null, 2))
 
 
 
