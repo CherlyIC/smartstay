@@ -1,27 +1,27 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: 'https://airbnb19.p.rapidapi.com',
+const BASE_URL = 'https://airbnb19.p.rapidapi.com'
 
+const options = {
   headers: {
-    'x-rapidapi-key': import.meta.env.VITE_RAPIDAPI_KEY,
-    'x-rapidapi-host': 'airbnb19.p.rapidapi.com',
+    'X-RapidAPI-Key': import.meta.env.VITE_RAPID_API_KEY,
+    'X-RapidAPI-Host': 'airbnb19.p.rapidapi.com',
     'Content-Type': 'application/json'
-  }
-})
+  },
+}
 
-export async function fetchListings(placeId) {
-  const { data } = await api.get('/api/v2/searchPropertyByPlaceId', {
-    params: { placeId }
+export const fetchListings = async (PlaceId) => {
+  const { data } = await axios.get(`${BASE_URL}/api/v2/searchPropertyByPlaceId`, { 
+    ...options, 
+    params: { PlaceId } 
   })
   return data
 }
 
 export async function fetchListingById(id) {
-  const { data } = await api.get('/api/v2/searchPropertyByPlaceId', {
-    params: { placeId: id }
+  const { data } = await axios.get(`${BASE_URL}/api/v2/searchPropertyByPlaceId`, {
+    ...options,
+    params: { PlaceId: id },
   })
   return data
 }
-
-export default api

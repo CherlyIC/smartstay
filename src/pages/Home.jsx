@@ -6,13 +6,14 @@ import ListingCard from '../components/ListingCard'
 import Loader from '../components/Loader'
 import ErrorState from '../components/ErrorState'
 
-const DEFAULT_PLACE_ID = 'ChIJD7fiBh9u5kcRYJSMaMOCCwQ'
+const DEFAULT_PLACE_ID = 'ChIJ7cv00DwsDogRAMDACa2m4K8'
 
 function Home() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('search')
 
   const [maxPrice, setMaxPrice] = useState(500)
+   const [minRating, setMinRating] = useState(0)
 
   const placeId = searchQuery || DEFAULT_PLACE_ID
 
@@ -21,16 +22,35 @@ function Home() {
     queryFn: function() {
       return fetchListings(placeId)
     },
+    enabled: !!placeId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false
   })
 
   const listings = data?.data?.list || data?.results || data?.data || []
 
-  const filteredListings = listings.filter(function(listing) {
-    const price = listing.price?.total || listing.price?.rate || 0
-    return price <= maxPrice
-  })
+
+
+const filteredListings = listings.filter(function(listing) {
+  const priceStr = listing.structuredDisplayPrice?.primaryLine?.price || '$0'
+  const price = Number(priceStr.replace(/[^0-9]/g, ''))
+  const rating = listing.avgRatingLocalized !== 'New'
+    ? Number(listing.avgRatingLocalized) || 0
+    : 0
+
+  const inner = listing.listing || listing
+  const name = inner.name || inner.title || ''
+  const city = inner.legacyCity || inner.city || ''
+
+  const matchesSearch = searchQuery 
+    ? name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      city.toLowerCase().includes(searchQuery.toLowerCase())
+    : true
+
+  return price <= maxPrice && rating >= minRating && matchesSearch
+})
 
   if (isLoading) return <Loader />
 
@@ -69,15 +89,15 @@ function Home() {
       {filteredListings.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="text-lg">No listings found</p>
-          <p className="text-sm mt-1">Try adjusting your price filter or search</p>
+          <p className="text-sm mt-1">Try another place</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredListings.map(function(listing) {
+        {filteredListings.map(function(listing, index) {
           return (
             <ListingCard
-              key={listing.id}
+              key={listing.id || listing.listingId || index}
               listing={listing}
             />
           )
