@@ -89,7 +89,7 @@ const filteredListings = listings.filter(function(listing) {
       {filteredListings.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="text-lg">No listings found</p>
-          <p className="text-sm mt-1">Try adjusting your price filter or search</p>
+          <p className="text-sm mt-1">Try another place</p>
         </div>
       )}
 

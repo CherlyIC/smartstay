@@ -14,9 +14,8 @@ function Login() {
         <form onSubmit={(e) => {
           e.preventDefault()
           const email = e.target[0].value
-          // Perform local frontend login
           login({ email, name: email.split('@')[0] })
-          navigate(-1) // Redirect back to previous page
+          navigate(-1) 
         }}>
           <div className="space-y-4">
             <div>
@@ -25,7 +24,6 @@ function Login() {
                 placeholder="Email address" 
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
                 required
-                defaultValue="student@example.com"
               />
             </div>
             <div>
@@ -34,7 +32,6 @@ function Login() {
                 placeholder="Password" 
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
                 required
-                defaultValue="password123"
               />
             </div>
             <button 

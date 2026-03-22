@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useFavorites } from '../context/FavoritesContext'
 import useAuthStore from '../store/authStore'
+import UserProfileCard from './UserProfileCard'
 
 function Navbar() {
   const [search, setSearch] = useState('')
@@ -71,12 +72,7 @@ function Navbar() {
           </Link>
 
           {isAuthenticated ? (
-            <button
-              onClick={() => logout()}
-              className="px-4 py-2 border border-gray-300 rounded-full text-sm text-gray-700 hover:shadow-md transition-shadow"
-            >
-              Logout
-            </button>
+            <UserProfileCard />
           ) : (
             <Link
               to="/login"

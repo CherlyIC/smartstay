@@ -1,4 +1,3 @@
-// src/context/FavoritesContext.jsx
 import { createContext, useContext, useState } from 'react'
 
 const FavoritesContext = createContext(null)
@@ -31,7 +30,6 @@ export function FavoritesProvider({ children }) {
   )
 }
 
-// ← This is what was missing — the named export
 export function useFavorites() {
   return useContext(FavoritesContext)
 }
