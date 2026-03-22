@@ -39,7 +39,17 @@ const filteredListings = listings.filter(function(listing) {
   const rating = listing.avgRatingLocalized !== 'New'
     ? Number(listing.avgRatingLocalized) || 0
     : 0
-  return price <= maxPrice && rating >= minRating
+
+  const inner = listing.listing || listing
+  const name = inner.name || inner.title || ''
+  const city = inner.legacyCity || inner.city || ''
+
+  const matchesSearch = searchQuery 
+    ? name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      city.toLowerCase().includes(searchQuery.toLowerCase())
+    : true
+
+  return price <= maxPrice && rating >= minRating && matchesSearch
 })
 
   if (isLoading) return <Loader />
@@ -79,7 +89,7 @@ const filteredListings = listings.filter(function(listing) {
       {filteredListings.length === 0 && (
         <div className="text-center py-20 text-gray-400">
           <p className="text-lg">No listings found</p>
-          <p className="text-sm mt-1">Try adjusting your price filter or search</p>
+          <p className="text-sm mt-1">Try another place</p>
         </div>
       )}
 

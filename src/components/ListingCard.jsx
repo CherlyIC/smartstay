@@ -1,47 +1,40 @@
-// src/components/ListingCard.jsx
 import { Link } from 'react-router-dom'
 import { useFavorites } from '../context/FavoritesContext'
 
 function ListingCard({ listing }) {
   const { toggleFavorite, isFavorited } = useFavorites()
 
-  // ── All data lives inside listing.listing ──────────
   const innerListing = listing.listing || listing
-
   const id = innerListing.id || innerListing.listingId
   const favorited = isFavorited(id)
 
-  // Name is inside listing.listing.name
   const name = innerListing.name
     || innerListing.title
     || listing.title
     || 'No name available'
 
-  // City is inside listing.listing.legacyCity
   const city = innerListing.legacyCity
     || innerListing.city
     || ''
 
-  // Pictures are in listing.listing.contextualPictures
   const pictures = innerListing.contextualPictures
     || listing.contextualPictures
     || []
   const image = pictures[0]?.picture || null
 
-  // Price is in listing.structuredDisplayPrice
+  const rate = innerListing.pricingQuote?.rate?.amountFormatted || innerListing.price?.rate || innerListing.price?.total;
+  
   const price = listing.structuredDisplayPrice?.primaryLine?.price
     || listing.structuredDisplayPrice?.primaryLine?.displayComponentPrices?.[0]?.amount
+    || rate
     || 'N/A'
 
-  // Rating
   const rating = listing.avgRatingLocalized !== 'New'
     ? listing.avgRatingLocalized
     : null
 
   return (
     <div className="group cursor-pointer">
-
-      {/* Image */}
       <div className="relative overflow-hidden rounded-2xl aspect-square bg-gray-100">
         {image ? (
           <img
@@ -55,7 +48,6 @@ function ListingCard({ listing }) {
           </div>
         )}
 
-        {/* Favorite button */}
         <button
           onClick={function(e) {
             e.preventDefault()
@@ -69,8 +61,7 @@ function ListingCard({ listing }) {
         </button>
       </div>
 
-      {/* Info */}
-      <Link to={`/listing/${id}`}>
+      <Link to={`/listing/${id}`} state={{ listing }}>
         <div className="mt-3 space-y-1">
           <div className="flex items-center justify-between">
             <p className="font-semibold text-gray-800 text-sm truncate flex-1">

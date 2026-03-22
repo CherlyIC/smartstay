@@ -1,4 +1,3 @@
-// src/App.jsx
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
@@ -11,17 +10,13 @@ import ProtectedRoute from './components/ProtectedRoute'
 function App() {
   return (
     <div>
-      {/* Navbar shows on every page */}
+      
       <Navbar />
-
-      {/* Routes — each path renders a different page */}
       <Routes>
         <Route path="/"            element={<Home />} />
         <Route path="/listing/:id" element={<ListingDetails />} />
         <Route path="/favorites"   element={<Favorites />} />
         <Route path="/login"       element={<Login />} />
-
-        {/* Protected — only logged in users can visit /bookings */}
         <Route path="/bookings" element={
           <ProtectedRoute>
             <Bookings />
