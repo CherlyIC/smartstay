@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useFavorites } from '../context/FavoritesContext'
+import useAuthStore from '../store/authStore'
 
 function Navbar() {
   const [search, setSearch] = useState('')
   const { favorites } = useFavorites()
+  const { isAuthenticated, logout } = useAuthStore()
   const navigate = useNavigate()
 
   function handleSearch(e){
@@ -68,14 +70,21 @@ function Navbar() {
             Trips
           </Link>
 
-          <Link
-            to="/login"
-            className="px-4 py-2 border border-gray-300 rounded-full text-sm text-gray-700 hover:shadow-md transition-shadow"
-          >
-            Login
-          </Link>
-
-
+          {isAuthenticated ? (
+            <button
+              onClick={() => logout()}
+              className="px-4 py-2 border border-gray-300 rounded-full text-sm text-gray-700 hover:shadow-md transition-shadow"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 py-2 border border-gray-300 rounded-full text-sm text-gray-700 hover:shadow-md transition-shadow"
+            >
+              Login
+            </Link>
+          )}
 
         </div>
         

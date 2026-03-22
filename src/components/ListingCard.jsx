@@ -22,8 +22,11 @@ function ListingCard({ listing }) {
     || []
   const image = pictures[0]?.picture || null
 
+  const rate = innerListing.pricingQuote?.rate?.amountFormatted || innerListing.price?.rate || innerListing.price?.total;
+  
   const price = listing.structuredDisplayPrice?.primaryLine?.price
     || listing.structuredDisplayPrice?.primaryLine?.displayComponentPrices?.[0]?.amount
+    || rate
     || 'N/A'
 
   const rating = listing.avgRatingLocalized !== 'New'

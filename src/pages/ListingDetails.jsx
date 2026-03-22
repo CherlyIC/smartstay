@@ -75,8 +75,10 @@ function ListingDetails() {
   
   const reviewCount = listingData.reviewsCount || 0
   
+  const fallbackRate = innerListing.pricingQuote?.rate?.amountFormatted || innerListing.price?.rate || innerListing.price?.total
   const priceDisplay = listingData.structuredDisplayPrice?.primaryLine?.price 
     || listingData.structuredDisplayPrice?.primaryLine?.displayComponentPrices?.[0]?.amount 
+    || fallbackRate
     || 'N/A'
     
   const priceNum = Number(priceDisplay.replace(/[^0-9.]/g, '')) || 0
