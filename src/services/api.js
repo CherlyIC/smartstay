@@ -19,7 +19,8 @@ export const fetchListings = async (PlaceId) => {
 }
 
 export async function fetchListingById(id) {
-  const { data } = await api.get( '/api/v2/searchPropertyByPlaceId', {
+  const { data } = await axios.get(`${BASE_URL}/api/v2/searchPropertyByPlaceId`, {
+    ...options,
     params: { PlaceId: id },
   })
   return data
