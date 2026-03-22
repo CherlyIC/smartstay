@@ -6,7 +6,7 @@ import ListingCard from '../components/ListingCard'
 import Loader from '../components/Loader'
 import ErrorState from '../components/ErrorState'
 
-const DEFAULT_PLACE_ID = 'ChIJD7fiBh9u5kcRYJSMaMOCCwQ'
+const DEFAULT_PLACE_ID = 'ChIJ7cv00DwsDogRAMDACa2m4K8'
 
 function Home() {
   const [searchParams] = useSearchParams()
@@ -21,8 +21,11 @@ function Home() {
     queryFn: function() {
       return fetchListings(placeId)
     },
+    enabled: !!placeId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false
   })
 
   const listings = data?.data?.list || data?.results || data?.data || []
