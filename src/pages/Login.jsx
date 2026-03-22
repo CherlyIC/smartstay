@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
+import useAuthStore from '../store/authStore'
 
 function Login() {
   const navigate = useNavigate()
+  const { login } = useAuthStore()
 
   return (
     <div className="max-w-md mx-auto px-4 py-20">
@@ -11,8 +13,10 @@ function Login() {
         
         <form onSubmit={(e) => {
           e.preventDefault()
-          // Mock login -> redirect to home
-          navigate('/')
+          const email = e.target[0].value
+          // Perform local frontend login
+          login({ email, name: email.split('@')[0] })
+          navigate(-1) // Redirect back to previous page
         }}>
           <div className="space-y-4">
             <div>
