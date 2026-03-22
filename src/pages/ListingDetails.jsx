@@ -1,36 +1,48 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { fetchListingById } from '../services/api'
+import { fetchListings } from '../services/api'
 import { useFavorites } from '../context/FavoritesContext'
 import useBookingStore from '../store/bookingStore'
 import Loader from '../components/Loader'
 import ErrorState from '../components/ErrorState'
 import BookingForm from '../components/BookingForm'
 
+const DEFAULT_PLACE_ID = 'ChIJ7cv00DwsDogRAMDACa2m4K8'
+
 function ListingDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [activeImage, setActiveImage] = useState(0)
 
   const { toggleFavorite, isFavorited } = useFavorites()
   const { isBooked } = useBookingStore()
 
+  const stateListing = location.state?.listing
+
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['listing', id],
-    queryFn: function() {
-      return fetchListingById(id)
-    },
+    queryKey: ['listings', DEFAULT_PLACE_ID],
+    queryFn: () => fetchListings(DEFAULT_PLACE_ID),
+    enabled: !stateListing,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: false,
   })
 
-  const listing = data?.data?.list?.[0] || data?.data || data
+  let listingData = stateListing
 
-  if (isLoading) return <Loader />
+  if (!listingData && data) {
+    const listings = data?.data?.list || data?.results || data?.data || []
+    listingData = listings.find(l => {
+      const lid = l.listing?.id || l.listingId || l.id
+      return String(lid) === String(id)
+    })
+  }
 
-  if (isError) {
+  if (isLoading && !stateListing) return <Loader />
+
+  if (isError && !stateListing) {
     return (
       <ErrorState
         message={error?.message}
@@ -39,12 +51,12 @@ function ListingDetails() {
     )
   }
 
-  if (!listing) {
+  if (!listingData) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <p className="text-gray-500 text-lg">Listing not found</p>
         <button
-          onClick={function() { navigate('/') }}
+          onClick={() => navigate('/')}
           className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-colors"
         >
           Back to listings
@@ -53,23 +65,36 @@ function ListingDetails() {
     )
   }
 
-  const name = listing.name || 'No name available'
-  const city = listing.city || listing.locationTitle || ''
-  const rating = listing.avgRating || listing.rating || null
-  const reviewCount = listing.reviewsCount || 0
-  const price = listing.price?.total || listing.price?.rate || 'N/A'
-  const images = listing.images?.length > 0
-    ? listing.images
+  const innerListing = listingData.listing || listingData
+
+  const name = innerListing.name || innerListing.title || listingData.title || 'No name available'
+  const city = innerListing.legacyCity || innerListing.city || ''
+  
+  const ratingStr = listingData.avgRatingLocalized
+  const rating = ratingStr !== 'New' && ratingStr ? Number(ratingStr) : null
+  
+  const reviewCount = listingData.reviewsCount || 0
+  
+  const priceDisplay = listingData.structuredDisplayPrice?.primaryLine?.price 
+    || listingData.structuredDisplayPrice?.primaryLine?.displayComponentPrices?.[0]?.amount 
+    || 'N/A'
+    
+  const priceNum = Number(priceDisplay.replace(/[^0-9.]/g, '')) || 0
+
+  const pictures = innerListing.contextualPictures || listingData.contextualPictures || []
+  const images = pictures.length > 0
+    ? pictures.map(p => p.picture)
     : ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800']
-  const description = listing.description || 'A beautiful place to stay.'
-  const amenities = listing.amenities || listing.previewAmenities || []
-  const favorited = isFavorited(listing.id)
-  const alreadyBooked = isBooked(listing.id)
+    
+  const description = innerListing.description || listingData.description || 'A beautiful place to stay.'
+  const amenities = innerListing.amenities || innerListing.previewAmenities || listingData.amenities || []
+  const favorited = isFavorited(id)
+  const alreadyBooked = isBooked(id)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <button
-        onClick={function() { navigate(-1) }}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors mb-6"
       >
         <span>←</span>
@@ -82,7 +107,7 @@ function ListingDetails() {
           <div className="flex items-center gap-3 mt-1 flex-wrap">
             {rating && (
               <span className="flex items-center gap-1 text-sm text-gray-700">
-                ★ <strong>{Number(rating).toFixed(1)}</strong>
+                ★ <strong>{rating.toFixed(1)}</strong>
                 {reviewCount > 0 && (
                   <span className="text-gray-400">· {reviewCount} reviews</span>
                 )}
@@ -95,7 +120,7 @@ function ListingDetails() {
         </div>
 
         <button
-          onClick={function() { toggleFavorite(listing) }}
+          onClick={() => toggleFavorite({ ...listingData, id })}
           className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full hover:shadow-md transition-shadow shrink-0"
         >
           <span className={favorited ? 'text-rose-500' : 'text-gray-400'}>
@@ -118,25 +143,23 @@ function ListingDetails() {
 
         {images.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {images.map(function(img, index) {
-              return (
-                <button
-                  key={index}
-                  onClick={function() { setActiveImage(index) }}
-                  className={`shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 transition-colors ${
-                    activeImage === index
-                      ? 'border-rose-500'
-                      : 'border-transparent'
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt={`view ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              )
-            })}
+            {images.map((img, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveImage(index)}
+                className={`shrink-0 w-20 h-16 rounded-xl overflow-hidden border-2 transition-colors ${
+                  activeImage === index
+                    ? 'border-rose-500'
+                    : 'border-transparent'
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`view ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -169,17 +192,15 @@ function ListingDetails() {
                 Amenities
               </h2>
               <div className="grid grid-cols-2 gap-2">
-                {amenities.map(function(amenity, index) {
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 text-sm text-gray-600"
-                    >
-                      <span className="w-1.5 h-1.5 bg-rose-400 rounded-full shrink-0"></span>
-                      {amenity?.title || amenity}
-                    </div>
-                  )
-                })}
+                {amenities.map((amenity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 text-sm text-gray-600"
+                  >
+                    <span className="w-1.5 h-1.5 bg-rose-400 rounded-full shrink-0"></span>
+                    {amenity?.title || amenity}
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -189,23 +210,23 @@ function ListingDetails() {
               Price details
             </h2>
             <div className="flex justify-between text-sm text-gray-600">
-              <span>${price} x 1 night</span>
-              <span>${price}</span>
+              <span>{priceDisplay} x 1 night</span>
+              <span>${priceNum}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-600 mt-1">
               <span>Service fee</span>
-              <span>${Math.round(Number(price) * 0.12)}</span>
+              <span>${Math.round(priceNum * 0.12)}</span>
             </div>
             <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between font-semibold text-gray-800">
               <span>Total</span>
-              <span>${Math.round(Number(price) * 1.12)}</span>
+              <span>${Math.round(priceNum * 1.12)}</span>
             </div>
           </div>
         </div>
 
         <div className="lg:col-span-1">
           <div className="sticky top-24">
-            <BookingForm listing={listing} />
+            <BookingForm listing={{ ...listingData, id }} />
           </div>
         </div>
       </div>
