@@ -10,7 +10,7 @@ function Navbar() {
   function handleSearch(e){
     e.preventDefault()
     if (search.trim()){
-      navigate(`/search?search=${search}`)
+      navigate(`/?search=${search}`)
     }
   }
 
