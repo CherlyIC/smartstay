@@ -6,13 +6,14 @@ import ListingCard from '../components/ListingCard'
 import Loader from '../components/Loader'
 import ErrorState from '../components/ErrorState'
 
-const DEFAULT_PLACE_ID = 'ChIJD7fiBh9u5kcRYJSMaMOCCwQ'
+const DEFAULT_PLACE_ID = 'ChIJ7cv00DwsDogRAMDACa2m4K8'
 
 function Home() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('search')
 
   const [maxPrice, setMaxPrice] = useState(500)
+   const [minRating, setMinRating] = useState(0)
 
   const placeId = searchQuery || DEFAULT_PLACE_ID
 
@@ -21,16 +22,25 @@ function Home() {
     queryFn: function() {
       return fetchListings(placeId)
     },
+    enabled: !!placeId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false
   })
 
   const listings = data?.data?.list || data?.results || data?.data || []
 
-  const filteredListings = listings.filter(function(listing) {
-    const price = listing.price?.total || listing.price?.rate || 0
-    return price <= maxPrice
-  })
+
+
+const filteredListings = listings.filter(function(listing) {
+  const priceStr = listing.structuredDisplayPrice?.primaryLine?.price || '$0'
+  const price = Number(priceStr.replace(/[^0-9]/g, ''))
+  const rating = listing.avgRatingLocalized !== 'New'
+    ? Number(listing.avgRatingLocalized) || 0
+    : 0
+  return price <= maxPrice && rating >= minRating
+})
 
   if (isLoading) return <Loader />
 
@@ -74,10 +84,10 @@ function Home() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredListings.map(function(listing) {
+        {filteredListings.map(function(listing, index) {
           return (
             <ListingCard
-              key={listing.id}
+              key={listing.id || listing.listingId || index}
               listing={listing}
             />
           )
