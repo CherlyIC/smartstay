@@ -17,3 +17,10 @@ export const fetchListings = async (PlaceId) => {
   })
   return data
 }
+
+export async function fetchListingById(id) {
+  const { data } = await api.get( '/api/v2/searchPropertyByPlaceId', {
+    params: { PlaceId: id },
+  })
+  return data
+}
